@@ -29,9 +29,9 @@ var DEFAULT_CATEGORY = "DEFAULT";
  * @constructor
  */
 function CharacterDefinition() {
-    this.character_category_map = new Uint8Array(65536);  // for all UCS2 code points
-    this.compatible_category_map = new Uint32Array(65536);  // for all UCS2 code points
-    this.invoke_definition_map = null;
+  this.character_category_map = new Uint8Array(65536); // for all UCS2 code points
+  this.compatible_category_map = new Uint32Array(65536); // for all UCS2 code points
+  this.invoke_definition_map = null;
 }
 
 /**
@@ -41,105 +41,180 @@ function CharacterDefinition() {
  * @param {InvokeDefinitionMap} invoke_def_buffer
  * @returns {CharacterDefinition}
  */
-CharacterDefinition.load = function (cat_map_buffer, compat_cat_map_buffer, invoke_def_buffer) {
-    var char_def = new CharacterDefinition();
-    char_def.character_category_map = cat_map_buffer;
-    char_def.compatible_category_map = compat_cat_map_buffer;
-    char_def.invoke_definition_map = InvokeDefinitionMap.load(invoke_def_buffer);
-    return char_def;
+CharacterDefinition.load = function (
+  cat_map_buffer,
+  compat_cat_map_buffer,
+  invoke_def_buffer
+) {
+  console.log("[kuromoji] CharacterDefinition.load called");
+  console.log(
+    "  cat_map_buffer type:",
+    typeof cat_map_buffer,
+    "length:",
+    cat_map_buffer.byteLength || cat_map_buffer.length,
+    "sample:",
+    cat_map_buffer && cat_map_buffer.slice
+      ? Array.from(cat_map_buffer.slice(0, 10))
+      : "n/a"
+  );
+  console.log(
+    "  compat_cat_map_buffer type:",
+    typeof compat_cat_map_buffer,
+    "length:",
+    compat_cat_map_buffer.byteLength || compat_cat_map_buffer.length,
+    "sample:",
+    compat_cat_map_buffer && compat_cat_map_buffer.slice
+      ? Array.from(compat_cat_map_buffer.slice(0, 10))
+      : "n/a"
+  );
+  console.log(
+    "  invoke_def_buffer type:",
+    typeof invoke_def_buffer,
+    "length:",
+    invoke_def_buffer.byteLength || invoke_def_buffer.length,
+    "sample:",
+    invoke_def_buffer && invoke_def_buffer.slice
+      ? Array.from(invoke_def_buffer.slice(0, 10))
+      : "n/a"
+  );
+  var char_def = new CharacterDefinition();
+  char_def.character_category_map = cat_map_buffer;
+  char_def.compatible_category_map = compat_cat_map_buffer;
+  char_def.invoke_definition_map = InvokeDefinitionMap.load(invoke_def_buffer);
+  console.log(
+    "[kuromoji] CharacterDefinition.load: invoke_definition_map.map length:",
+    char_def.invoke_definition_map.map.length,
+    "sample:",
+    char_def.invoke_definition_map.map.slice
+      ? char_def.invoke_definition_map.map.slice(0, 5)
+      : "n/a"
+  );
+  return char_def;
 };
 
-CharacterDefinition.parseCharCategory = function (class_id, parsed_category_def) {
-    var category = parsed_category_def[1];
-    var invoke = parseInt(parsed_category_def[2]);
-    var grouping = parseInt(parsed_category_def[3]);
-    var max_length = parseInt(parsed_category_def[4]);
-    if (!isFinite(invoke) || (invoke !== 0 && invoke !== 1)) {
-        console.log("char.def parse error. INVOKE is 0 or 1 in:" + invoke);
-        return null;
-    }
-    if (!isFinite(grouping) || (grouping !== 0 && grouping !== 1)) {
-        console.log("char.def parse error. GROUP is 0 or 1 in:" + grouping);
-        return null;
-    }
-    if (!isFinite(max_length) || max_length < 0) {
-        console.log("char.def parse error. LENGTH is 1 to n:" + max_length);
-        return null;
-    }
-    var is_invoke = (invoke === 1);
-    var is_grouping = (grouping === 1);
+CharacterDefinition.parseCharCategory = function (
+  class_id,
+  parsed_category_def
+) {
+  var category = parsed_category_def[1];
+  var invoke = parseInt(parsed_category_def[2]);
+  var grouping = parseInt(parsed_category_def[3]);
+  var max_length = parseInt(parsed_category_def[4]);
+  if (!isFinite(invoke) || (invoke !== 0 && invoke !== 1)) {
+    console.log("char.def parse error. INVOKE is 0 or 1 in:" + invoke);
+    return null;
+  }
+  if (!isFinite(grouping) || (grouping !== 0 && grouping !== 1)) {
+    console.log("char.def parse error. GROUP is 0 or 1 in:" + grouping);
+    return null;
+  }
+  if (!isFinite(max_length) || max_length < 0) {
+    console.log("char.def parse error. LENGTH is 1 to n:" + max_length);
+    return null;
+  }
+  var is_invoke = invoke === 1;
+  var is_grouping = grouping === 1;
 
-    return new CharacterClass(class_id, category, is_invoke, is_grouping, max_length);
+  return new CharacterClass(
+    class_id,
+    category,
+    is_invoke,
+    is_grouping,
+    max_length
+  );
 };
 
 CharacterDefinition.parseCategoryMapping = function (parsed_category_mapping) {
-    var start = parseInt(parsed_category_mapping[1]);
-    var default_category = parsed_category_mapping[2];
-    var compatible_category = (3 < parsed_category_mapping.length) ? parsed_category_mapping.slice(3) : [];
-    if (!isFinite(start) || start < 0 || start > 0xFFFF) {
-        console.log("char.def parse error. CODE is invalid:" + start);
-    }
-    return { start: start, default: default_category, compatible: compatible_category};
+  var start = parseInt(parsed_category_mapping[1]);
+  var default_category = parsed_category_mapping[2];
+  var compatible_category =
+    3 < parsed_category_mapping.length ? parsed_category_mapping.slice(3) : [];
+  if (!isFinite(start) || start < 0 || start > 0xffff) {
+    console.log("char.def parse error. CODE is invalid:" + start);
+  }
+  return {
+    start: start,
+    default: default_category,
+    compatible: compatible_category,
+  };
 };
 
-CharacterDefinition.parseRangeCategoryMapping = function (parsed_category_mapping) {
-    var start = parseInt(parsed_category_mapping[1]);
-    var end = parseInt(parsed_category_mapping[2]);
-    var default_category = parsed_category_mapping[3];
-    var compatible_category = (4 < parsed_category_mapping.length) ? parsed_category_mapping.slice(4) : [];
-    if (!isFinite(start) || start < 0 || start > 0xFFFF) {
-        console.log("char.def parse error. CODE is invalid:" + start);
-    }
-    if (!isFinite(end) || end < 0 || end > 0xFFFF) {
-        console.log("char.def parse error. CODE is invalid:" + end);
-    }
-    return { start: start, end: end, default: default_category, compatible: compatible_category};
+CharacterDefinition.parseRangeCategoryMapping = function (
+  parsed_category_mapping
+) {
+  var start = parseInt(parsed_category_mapping[1]);
+  var end = parseInt(parsed_category_mapping[2]);
+  var default_category = parsed_category_mapping[3];
+  var compatible_category =
+    4 < parsed_category_mapping.length ? parsed_category_mapping.slice(4) : [];
+  if (!isFinite(start) || start < 0 || start > 0xffff) {
+    console.log("char.def parse error. CODE is invalid:" + start);
+  }
+  if (!isFinite(end) || end < 0 || end > 0xffff) {
+    console.log("char.def parse error. CODE is invalid:" + end);
+  }
+  return {
+    start: start,
+    end: end,
+    default: default_category,
+    compatible: compatible_category,
+  };
 };
 
 /**
  * Initializing method
  * @param {Array} category_mapping Array of category mapping
  */
-CharacterDefinition.prototype.initCategoryMappings = function (category_mapping) {
-    // Initialize map by DEFAULT class
-    var code_point;
-    if (category_mapping != null) {
-        for (var i = 0; i < category_mapping.length; i++) {
-            var mapping = category_mapping[i];
-            var end = mapping.end || mapping.start;
-            for (code_point = mapping.start; code_point <= end; code_point++) {
+CharacterDefinition.prototype.initCategoryMappings = function (
+  category_mapping
+) {
+  console.log(
+    "[kuromoji] CharacterDefinition.initCategoryMappings called, category_mapping length:",
+    category_mapping && category_mapping.length
+  );
+  // Initialize map by DEFAULT class
+  var code_point;
+  if (category_mapping != null) {
+    for (var i = 0; i < category_mapping.length; i++) {
+      var mapping = category_mapping[i];
+      var end = mapping.end || mapping.start;
+      for (code_point = mapping.start; code_point <= end; code_point++) {
+        // Default Category class ID
+        this.character_category_map[code_point] =
+          this.invoke_definition_map.lookup(mapping.default);
 
-                // Default Category class ID
-                this.character_category_map[code_point] = this.invoke_definition_map.lookup(mapping.default);
-
-                for (var j = 0; j < mapping.compatible.length; j++) {
-                    var bitset = this.compatible_category_map[code_point];
-                    var compatible_category = mapping.compatible[j];
-                    if (compatible_category == null) {
-                        continue;
-                    }
-                    var class_id = this.invoke_definition_map.lookup(compatible_category);  // Default Category
-                    if (class_id == null) {
-                        continue;
-                    }
-                    var class_id_bit = 1 << class_id;
-                    bitset = bitset | class_id_bit;  // Set a bit of class ID 例えば、class_idが3のとき、3ビット目に1を立てる
-                    this.compatible_category_map[code_point] = bitset;
-                }
-            }
+        for (var j = 0; j < mapping.compatible.length; j++) {
+          var bitset = this.compatible_category_map[code_point];
+          var compatible_category = mapping.compatible[j];
+          if (compatible_category == null) {
+            continue;
+          }
+          var class_id = this.invoke_definition_map.lookup(compatible_category); // Default Category
+          if (class_id == null) {
+            continue;
+          }
+          var class_id_bit = 1 << class_id;
+          bitset = bitset | class_id_bit; // Set a bit of class ID 例えば、class_idが3のとき、3ビット目に1を立てる
+          this.compatible_category_map[code_point] = bitset;
         }
+      }
     }
-    var default_id = this.invoke_definition_map.lookup(DEFAULT_CATEGORY);
-    if (default_id == null) {
-        return;
+  }
+  var default_id = this.invoke_definition_map.lookup(DEFAULT_CATEGORY);
+  if (default_id == null) {
+    return;
+  }
+  for (
+    code_point = 0;
+    code_point < this.character_category_map.length;
+    code_point++
+  ) {
+    // 他に何のクラスも定義されていなかったときだけ DEFAULT
+    if (this.character_category_map[code_point] === 0) {
+      // DEFAULT class ID に対応するビットだけ1を立てる
+      this.character_category_map[code_point] = 1 << default_id;
     }
-    for (code_point = 0; code_point < this.character_category_map.length; code_point++) {
-        // 他に何のクラスも定義されていなかったときだけ DEFAULT
-        if (this.character_category_map[code_point] === 0) {
-            // DEFAULT class ID に対応するビットだけ1を立てる
-            this.character_category_map[code_point] = 1 << default_id;
-        }
-    }
+  }
 };
 
 /**
@@ -148,35 +223,45 @@ CharacterDefinition.prototype.initCategoryMappings = function (category_mapping)
  * @returns {Array.<CharacterClass>} character classes
  */
 CharacterDefinition.prototype.lookupCompatibleCategory = function (ch) {
-    var classes = [];
+  console.log(
+    "[kuromoji] CharacterDefinition.lookupCompatibleCategory called for char:",
+    ch
+  );
+  var classes = [];
 
-    /*
+  /*
      if (SurrogateAwareString.isSurrogatePair(ch)) {
      // Surrogate pair character codes can not be defined by char.def
      return classes;
      }*/
-    var code = ch.charCodeAt(0);
-    var integer;
-    if (code < this.compatible_category_map.length) {
-        integer = this.compatible_category_map[code];  // Bitset
-    }
+  var code = ch.charCodeAt(0);
+  var integer;
+  if (code < this.compatible_category_map.length) {
+    integer = this.compatible_category_map[code]; // Bitset
+  }
 
-    if (integer == null || integer === 0) {
-        return classes;
-    }
-
-    for (var bit = 0; bit < 32; bit++) {  // Treat "bit" as a class ID
-        if (((integer << (31 - bit)) >>> 31) === 1) {
-            var character_class = this.invoke_definition_map.getCharacterClass(bit);
-            if (character_class == null) {
-                continue;
-            }
-            classes.push(character_class);
-        }
-    }
+  if (integer == null || integer === 0) {
     return classes;
-};
+  }
 
+  for (var bit = 0; bit < 32; bit++) {
+    // Treat "bit" as a class ID
+    if ((integer << (31 - bit)) >>> 31 === 1) {
+      var character_class = this.invoke_definition_map.getCharacterClass(bit);
+      if (character_class == null) {
+        continue;
+      }
+      classes.push(character_class);
+    }
+  }
+  console.log(
+    "[kuromoji] CharacterDefinition.lookupCompatibleCategory returning classes, length:",
+    classes.length,
+    "sample:",
+    classes.slice ? classes.slice(0, 5) : "n/a"
+  );
+  return classes;
+};
 
 /**
  * Lookup category for a character
@@ -184,22 +269,24 @@ CharacterDefinition.prototype.lookupCompatibleCategory = function (ch) {
  * @returns {CharacterClass} character class
  */
 CharacterDefinition.prototype.lookup = function (ch) {
+  console.log("[kuromoji] CharacterDefinition.lookup called for char:", ch);
+  var class_id;
 
-    var class_id;
+  var code = ch.charCodeAt(0);
+  if (SurrogateAwareString.isSurrogatePair(ch)) {
+    // Surrogate pair character codes can not be defined by char.def, so set DEFAULT category
+    class_id = this.invoke_definition_map.lookup(DEFAULT_CATEGORY);
+  } else if (code < this.character_category_map.length) {
+    class_id = this.character_category_map[code]; // Read as integer value
+  }
 
-    var code = ch.charCodeAt(0);
-    if (SurrogateAwareString.isSurrogatePair(ch)) {
-        // Surrogate pair character codes can not be defined by char.def, so set DEFAULT category
-        class_id = this.invoke_definition_map.lookup(DEFAULT_CATEGORY);
-    } else if (code < this.character_category_map.length) {
-        class_id = this.character_category_map[code];  // Read as integer value
-    }
+  if (class_id == null) {
+    class_id = this.invoke_definition_map.lookup(DEFAULT_CATEGORY);
+  }
 
-    if (class_id == null) {
-        class_id = this.invoke_definition_map.lookup(DEFAULT_CATEGORY);
-    }
-
-    return this.invoke_definition_map.getCharacterClass(class_id);
+  var result = this.invoke_definition_map.getCharacterClass(class_id);
+  console.log("[kuromoji] CharacterDefinition.lookup returning class:", result);
+  return result;
 };
 
 module.exports = CharacterDefinition;
