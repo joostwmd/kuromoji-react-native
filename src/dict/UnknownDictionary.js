@@ -21,38 +21,71 @@ var TokenInfoDictionary = require("./TokenInfoDictionary");
 var CharacterDefinition = require("./CharacterDefinition");
 var ByteBuffer = require("../util/ByteBuffer");
 
+function createMapProxy(map) {
+  return new Proxy(map, {
+    get(target, prop) {
+      if (prop in target) return target[prop];
+      return target.get(prop);
+    },
+    set(target, prop, value) {
+      target.set(prop, value);
+      return true;
+    },
+    has(target, prop) {
+      return target.has(prop);
+    },
+    deleteProperty(target, prop) {
+      return target.delete(prop);
+    },
+  });
+}
+
 /**
  * UnknownDictionary
  * @constructor
  */
 function UnknownDictionary() {
-    this.dictionary = new ByteBuffer(10 * 1024 * 1024);
-    this.target_map = {};  // class_id (of CharacterClass) -> token_info_id (of unknown class)
-    this.pos_buffer = new ByteBuffer(10 * 1024 * 1024);
-    this.character_definition = null;
+  this.dictionary = new ByteBuffer(10 * 1024 * 1024);
+  this.temp_map = new Map();
+  this.target_map = createMapProxy(this.temp_map);
+  this.pos_buffer = new ByteBuffer(10 * 1024 * 1024);
+  this.character_definition = null;
 }
 
 // Inherit from TokenInfoDictionary as a super class
 UnknownDictionary.prototype = Object.create(TokenInfoDictionary.prototype);
 
-UnknownDictionary.prototype.characterDefinition = function (character_definition) {
-    this.character_definition = character_definition;
-    return this;
+UnknownDictionary.prototype.characterDefinition = function (
+  character_definition
+) {
+  this.character_definition = character_definition;
+  return this;
 };
 
 UnknownDictionary.prototype.lookup = function (ch) {
-    return this.character_definition.lookup(ch);
+  return this.character_definition.lookup(ch);
 };
 
 UnknownDictionary.prototype.lookupCompatibleCategory = function (ch) {
-    return this.character_definition.lookupCompatibleCategory(ch);
+  return this.character_definition.lookupCompatibleCategory(ch);
 };
 
-UnknownDictionary.prototype.loadUnknownDictionaries = function (unk_buffer, unk_pos_buffer, unk_map_buffer, cat_map_buffer, compat_cat_map_buffer, invoke_def_buffer) {
-    this.loadDictionary(unk_buffer);
-    this.loadPosVector(unk_pos_buffer);
-    this.loadTargetMap(unk_map_buffer);
-    this.character_definition = CharacterDefinition.load(cat_map_buffer, compat_cat_map_buffer, invoke_def_buffer);
+UnknownDictionary.prototype.loadUnknownDictionaries = function (
+  unk_buffer,
+  unk_pos_buffer,
+  unk_map_buffer,
+  cat_map_buffer,
+  compat_cat_map_buffer,
+  invoke_def_buffer
+) {
+  this.loadDictionary(unk_buffer);
+  this.loadPosVector(unk_pos_buffer);
+  this.loadTargetMap(unk_map_buffer);
+  this.character_definition = CharacterDefinition.load(
+    cat_map_buffer,
+    compat_cat_map_buffer,
+    invoke_def_buffer
+  );
 };
 
 module.exports = UnknownDictionary;
