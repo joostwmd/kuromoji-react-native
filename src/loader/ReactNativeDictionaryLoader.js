@@ -84,3 +84,5 @@ ReactNativeDictionaryLoader.prototype.loadArrayBuffer = async function (
     callback(err, null);
   }
 };
+
+module.exports = ReactNativeDictionaryLoader;
