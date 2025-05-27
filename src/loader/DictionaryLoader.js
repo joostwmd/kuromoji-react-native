@@ -30,6 +30,7 @@ function DictionaryLoader() {
 }
 
 DictionaryLoader.prototype.loadArrayBuffer = function (file, callback) {
+  console.log("[kuromoji] DictionaryLoader.loadArrayBuffer called for:", file);
   throw new Error("DictionaryLoader#loadArrayBuffer should be overwrite");
 };
 
@@ -52,6 +53,14 @@ DictionaryLoader.prototype.load = function (load_callback) {
               if (err) {
                 return _callback(err);
               }
+              console.log(
+                "[kuromoji] Trie buffer loaded for",
+                filename,
+                "type:",
+                typeof buffer,
+                "length:",
+                buffer.byteLength || buffer.length
+              );
               _callback(null, buffer);
             });
           },
@@ -59,6 +68,10 @@ DictionaryLoader.prototype.load = function (load_callback) {
             if (err) {
               return callback(err);
             }
+            console.log(
+              "[kuromoji] Trie buffers received:",
+              buffers.map((b) => b && (b.byteLength || b.length))
+            );
             var base_buffer = new Int32Array(buffers[0]);
             var check_buffer = new Int32Array(buffers[1]);
 
@@ -77,6 +90,14 @@ DictionaryLoader.prototype.load = function (load_callback) {
                 console.log(`Error loading file: ${filename}`, err);
                 return _callback(err);
               }
+              console.log(
+                "[kuromoji] Token info buffer loaded for",
+                filename,
+                "type:",
+                typeof buffer,
+                "length:",
+                buffer.byteLength || buffer.length
+              );
               _callback(null, buffer);
             });
           },
@@ -88,6 +109,10 @@ DictionaryLoader.prototype.load = function (load_callback) {
               );
               return callback(err);
             }
+            console.log(
+              "[kuromoji] Token info buffers received:",
+              buffers.map((b) => b && (b.byteLength || b.length))
+            );
             var token_info_buffer = new Uint8Array(buffers[0]);
             var pos_buffer = new Uint8Array(buffers[1]);
             var target_map_buffer = new Uint8Array(buffers[2]);
@@ -107,6 +132,12 @@ DictionaryLoader.prototype.load = function (load_callback) {
           if (err) {
             return callback(err);
           }
+          console.log(
+            "[kuromoji] Connection cost buffer loaded for cc.dat.gz, type:",
+            typeof buffer,
+            "length:",
+            buffer.byteLength || buffer.length
+          );
           var cc_buffer = new Int16Array(buffer);
           dic.loadConnectionCosts(cc_buffer);
           callback(null);
@@ -128,6 +159,14 @@ DictionaryLoader.prototype.load = function (load_callback) {
               if (err) {
                 return _callback(err);
               }
+              console.log(
+                "[kuromoji] Unknown dict buffer loaded for",
+                filename,
+                "type:",
+                typeof buffer,
+                "length:",
+                buffer.byteLength || buffer.length
+              );
               _callback(null, buffer);
             });
           },
@@ -135,6 +174,10 @@ DictionaryLoader.prototype.load = function (load_callback) {
             if (err) {
               return callback(err);
             }
+            console.log(
+              "[kuromoji] Unknown dict buffers received:",
+              buffers.map((b) => b && (b.byteLength || b.length))
+            );
             var unk_buffer = new Uint8Array(buffers[0]);
             var unk_pos_buffer = new Uint8Array(buffers[1]);
             var unk_map_buffer = new Uint8Array(buffers[2]);

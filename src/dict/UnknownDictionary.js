@@ -46,9 +46,27 @@ function createMapProxy(map) {
  */
 function UnknownDictionary() {
   this.dictionary = new ByteBuffer(10 * 1024 * 1024);
+  console.log(
+    "[kuromoji] UnknownDictionary: dictionary initialized, type:",
+    typeof this.dictionary,
+    "size:",
+    this.dictionary.buffer.length
+  );
   this.temp_map = new Map();
+  console.log(
+    "[kuromoji] UnknownDictionary: temp_map initialized, type:",
+    typeof this.temp_map,
+    "size:",
+    this.temp_map.size
+  );
   this.target_map = createMapProxy(this.temp_map);
   this.pos_buffer = new ByteBuffer(10 * 1024 * 1024);
+  console.log(
+    "[kuromoji] UnknownDictionary: pos_buffer initialized, type:",
+    typeof this.pos_buffer,
+    "size:",
+    this.pos_buffer.buffer.length
+  );
   this.character_definition = null;
 }
 
@@ -78,6 +96,43 @@ UnknownDictionary.prototype.loadUnknownDictionaries = function (
   compat_cat_map_buffer,
   invoke_def_buffer
 ) {
+  console.log("[kuromoji] loadUnknownDictionaries called");
+  console.log(
+    "  unk_buffer type:",
+    typeof unk_buffer,
+    "length:",
+    unk_buffer.byteLength || unk_buffer.length
+  );
+  console.log(
+    "  unk_pos_buffer type:",
+    typeof unk_pos_buffer,
+    "length:",
+    unk_pos_buffer.byteLength || unk_pos_buffer.length
+  );
+  console.log(
+    "  unk_map_buffer type:",
+    typeof unk_map_buffer,
+    "length:",
+    unk_map_buffer.byteLength || unk_map_buffer.length
+  );
+  console.log(
+    "  cat_map_buffer type:",
+    typeof cat_map_buffer,
+    "length:",
+    cat_map_buffer.byteLength || cat_map_buffer.length
+  );
+  console.log(
+    "  compat_cat_map_buffer type:",
+    typeof compat_cat_map_buffer,
+    "length:",
+    compat_cat_map_buffer.byteLength || compat_cat_map_buffer.length
+  );
+  console.log(
+    "  invoke_def_buffer type:",
+    typeof invoke_def_buffer,
+    "length:",
+    invoke_def_buffer.byteLength || invoke_def_buffer.length
+  );
   this.loadDictionary(unk_buffer);
   this.loadPosVector(unk_pos_buffer);
   this.loadTargetMap(unk_map_buffer);
@@ -85,6 +140,10 @@ UnknownDictionary.prototype.loadUnknownDictionaries = function (
     cat_map_buffer,
     compat_cat_map_buffer,
     invoke_def_buffer
+  );
+  console.log(
+    "[kuromoji] UnknownDictionary: character_definition loaded:",
+    !!this.character_definition
   );
 };
 

@@ -44,9 +44,27 @@ function createMapProxy(map) {
  */
 function TokenInfoDictionary() {
   this.dictionary = new ByteBuffer(10 * 1024 * 1024);
+  console.log(
+    "[kuromoji] TokenInfoDictionary: dictionary initialized, type:",
+    typeof this.dictionary,
+    "size:",
+    this.dictionary.buffer.length
+  );
   this.temp_map = new Map();
+  console.log(
+    "[kuromoji] TokenInfoDictionary: temp_map initialized, type:",
+    typeof this.temp_map,
+    "size:",
+    this.temp_map.size
+  );
   this.target_map = createMapProxy(this.temp_map);
   this.pos_buffer = new ByteBuffer(10 * 1024 * 1024);
+  console.log(
+    "[kuromoji] TokenInfoDictionary: pos_buffer initialized, type:",
+    typeof this.pos_buffer,
+    "size:",
+    this.pos_buffer.buffer.length
+  );
 }
 
 // left_id right_id word_cost ...
@@ -136,18 +154,48 @@ TokenInfoDictionary.prototype.targetMapToBuffer = function () {
 
 // from tid.dat
 TokenInfoDictionary.prototype.loadDictionary = function (array_buffer) {
+  console.log(
+    "[kuromoji] loadDictionary called, buffer type:",
+    typeof array_buffer,
+    "length:",
+    array_buffer.byteLength || array_buffer.length
+  );
   this.dictionary = new ByteBuffer(array_buffer);
+  console.log(
+    "[kuromoji] TokenInfoDictionary: dictionary loaded, type:",
+    typeof this.dictionary,
+    "size:",
+    this.dictionary.buffer.length
+  );
   return this;
 };
 
 // from tid_pos.dat
 TokenInfoDictionary.prototype.loadPosVector = function (array_buffer) {
+  console.log(
+    "[kuromoji] loadPosVector called, buffer type:",
+    typeof array_buffer,
+    "length:",
+    array_buffer.byteLength || array_buffer.length
+  );
   this.pos_buffer = new ByteBuffer(array_buffer);
+  console.log(
+    "[kuromoji] TokenInfoDictionary: pos_buffer loaded, type:",
+    typeof this.pos_buffer,
+    "size:",
+    this.pos_buffer.buffer.length
+  );
   return this;
 };
 
 // from tid_map.dat
 TokenInfoDictionary.prototype.loadTargetMap = function (array_buffer) {
+  console.log(
+    "[kuromoji] loadTargetMap called, buffer type:",
+    typeof array_buffer,
+    "length:",
+    array_buffer.byteLength || array_buffer.length
+  );
   var buffer = new ByteBuffer(array_buffer);
   buffer.position = 0;
   this.temp_map = new Map();
@@ -164,6 +212,10 @@ TokenInfoDictionary.prototype.loadTargetMap = function (array_buffer) {
       this.addMapping(key, value);
     }
   }
+  console.log(
+    "[kuromoji] TokenInfoDictionary: target_map loaded, temp_map size:",
+    this.temp_map.size
+  );
   return this;
 };
 
