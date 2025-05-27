@@ -18,7 +18,7 @@
 "use strict";
 
 var Tokenizer = require("./Tokenizer");
-var DictionaryLoader = require("./loader/NodeDictionaryLoader");
+var ReactNativeDictionaryLoader = require("./loader/ReactNativeDictionaryLoader");
 
 /**
  * TokenizerBuilder create Tokenizer instance.
@@ -27,22 +27,29 @@ var DictionaryLoader = require("./loader/NodeDictionaryLoader");
  * @constructor
  */
 function TokenizerBuilder(option) {
-    if (option.dicPath == null) {
-        this.dic_path = "dict/";
-    } else {
-        this.dic_path = option.dicPath;
-    }
+  if (!option.assets) {
+    throw new Error("Dictionary assets must be provided");
+  }
+  this.assets = option.assets;
 }
+
+TokenizerBuilder.prototype.downloadAssets = async function () {
+  const assetDownloadPromises = Object.values(this.assets).map((asset) => {
+    return asset.downloadAsync();
+  });
+  await Promise.all(assetDownloadPromises);
+};
 
 /**
  * Build Tokenizer instance by asynchronous manner
  * @param {TokenizerBuilder~onLoad} callback Callback function
  */
-TokenizerBuilder.prototype.build = function (callback) {
-    var loader = new DictionaryLoader(this.dic_path);
-    loader.load(function (err, dic) {
-        callback(err, new Tokenizer(dic));
-    });
+TokenizerBuilder.prototype.build = async function (callback) {
+  await this.downloadAssets();
+  var loader = new ReactNativeDictionaryLoader({ assets: this.assets });
+  await loader.load(function (err, dic) {
+    callback(err, new Tokenizer(dic));
+  });
 };
 
 /**

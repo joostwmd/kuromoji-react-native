@@ -1,88 +1,83 @@
-kuromoji.js
-===========
+# kuromoji.js
 
-[![Build Status](https://travis-ci.org/takuyaa/kuromoji.js.svg?branch=master)](https://travis-ci.org/takuyaa/kuromoji.js)
-[![Coverage Status](https://coveralls.io/repos/github/takuyaa/kuromoji.js/badge.svg?branch=master)](https://coveralls.io/github/takuyaa/kuromoji.js?branch=master)
-[![npm version](https://badge.fury.io/js/kuromoji.svg)](https://badge.fury.io/js/kuromoji)
-[![dependencies](https://david-dm.org/takuyaa/kuromoji.js.svg)](https://david-dm.org/takuyaa/kuromoji.js)
-[![Code Climate](https://codeclimate.com/github/takuyaa/kuromoji.js/badges/gpa.svg)](https://codeclimate.com/github/takuyaa/kuromoji.js)
-[![Downloads](https://img.shields.io/npm/dm/kuromoji.svg)](https://www.npmjs.com/package/kuromoji)
+This is a React Native port, based on [takuyaa](https://github.com/takuyaa/kuromoji.js)
+JavaScript implementation of Japanese morphological analyzer, which is a pure JavaScript porting of [Kuromoji](https://www.atilika.com/ja/kuromoji/).
 
-JavaScript implementation of Japanese morphological analyzer.
-This is a pure JavaScript porting of [Kuromoji](https://www.atilika.com/ja/kuromoji/).
-
-You can see how kuromoji.js works in [demo site](https://takuyaa.github.io/kuromoji.js/demo/tokenize.html).
-
-
-Directory
----------
-
-Directory tree is as follows:
-
-    build/
-      kuromoji.js -- JavaScript file for browser (Browserified)
-    demo/         -- Demo
-    dict/         -- Dictionaries for tokenizer (gzipped)
-    example/      -- Examples to use in Node.js
-    src/          -- JavaScript source
-    test/         -- Unit test
-
-
-Usage
------
-
-You can tokenize sentences with only 5 lines of code.
-If you need working examples, you can see the files under the demo or example directory.
-
+## Usage
 
 ### Node.js
 
 Install with npm package manager:
 
-    npm install kuromoji
+    npm install @charlescoeder/react-native-kuromoji
 
-Load this library as follows:
+To use this library in a React Native project, copy the `dict` folder into your assets folder, and then:
 
-    var kuromoji = require("kuromoji");
+```ts
+import kuromoji from "@/charlescoeder/kuromoji";
 
-You can prepare tokenizer like this:
+// load assets: copy 'dict' folder to your assets folder
+const assets = {
+  "base.dat.gz": Asset.fromModule(require("../assets/dict/base.dat.gz")),
+  "cc.dat.gz": Asset.fromModule(require("../assets/dict/cc.dat.gz")),
+  "check.dat.gz": Asset.fromModule(require("../assets/dict/check.dat.gz")),
+  "tid.dat.gz": Asset.fromModule(require("../assets/dict/tid.dat.gz")),
+  "tid_map.dat.gz": Asset.fromModule(require("../assets/dict/tid_map.dat.gz")),
+  "tid_pos.dat.gz": Asset.fromModule(require("../assets/dict/tid_pos.dat.gz")),
+  "unk.dat.gz": Asset.fromModule(require("../assets/dict/unk.dat.gz")),
+  "unk_char.dat.gz": Asset.fromModule(
+    require("../assets/dict/unk_char.dat.gz")
+  ),
+  "unk_compat.dat.gz": Asset.fromModule(
+    require("../assets/dict/unk_compat.dat.gz")
+  ),
+  "unk_invoke.dat.gz": Asset.fromModule(
+    require("../assets/dict/unk_invoke.dat.gz")
+  ),
+  "unk_map.dat.gz": Asset.fromModule(require("../assets/dict/unk_map.dat.gz")),
+  "unk_pos.dat.gz": Asset.fromModule(require("../assets/dict/unk_pos.dat.gz")),
+};
+kuromoji
+  .builder({ assets })
+  .build(
+    (err: any, tokenizer: { tokenize: (arg0: string) => KUROMOJI_TOKEN[] }) => {
+      if (err) {
+        console.error("kuromoji error:", err);
+        reject(err);
+      } else {
+        console.log("tokenizer loaded");
+        // parse sentences or save tokenizer as a singleton
+        const kuromoji_tokens = tokenizer.tokenize(mySentence);
+      }
+    }
+  );
+```
 
-    kuromoji.builder({ dicPath: "path/to/dictionary/dir/" }).build(function (err, tokenizer) {
-        // tokenizer is ready
-        var path = tokenizer.tokenize("すもももももももものうち");
-        console.log(path);
-    });
+`KUROMOJI_TOKEN` is defined like this
 
+```ts
+export interface KUROMOJI_TOKEN {
+  word_id: number;
+  word_type: "KNOWN" | "UNKNOWN" | "BOS" | "EOS";
+  word_position: number;
+  surface_form: string | Uint8Array;
+  pos: string;
+  pos_detail_1: string;
+  pos_detail_2: string;
+  pos_detail_3: string;
+  conjugated_type: string;
+  conjugated_form: string;
+  basic_form: string;
+  reading?: string;
+  pronunciation?: string;
+}
+```
 
+copy this type into your project if you are using TypeScript.
 
-### Browser
+Here is an example of `KUROMOJI_TOKEN` to explain what each component means
 
-You only need the build/kuromoji.js and dict/*.dat.gz files
-
-Install with Bower package manager:
-
-    bower install kuromoji
-
-Or you can use the kuromoji.js file and dictionary files from the GitHub repository.
-
-In your HTML:
-
-    <script src="url/to/kuromoji.js"></script>
-
-In your JavaScript:
-
-    kuromoji.builder({ dicPath: "/url/to/dictionary/dir/" }).build(function (err, tokenizer) {
-        // tokenizer is ready
-        var path = tokenizer.tokenize("すもももももももものうち");
-        console.log(path);
-    });
-
-
-API
----
-
-The function tokenize() returns an JSON array like this:
-
+```
     [ {
         word_id: 509800,          // 辞書内での単語ID
         word_type: 'KNOWN',       // 単語タイプ(辞書に登録されている単語ならKNOWN, 未知語ならUNKNOWN)
@@ -99,6 +94,4 @@ The function tokenize() returns an JSON array like this:
         pronunciation: 'クロモジ'  // 発音
       } ]
 
-(This is defined in src/util/IpadicFormatter.js)
-
-See also [JSDoc page](https://takuyaa.github.io/kuromoji.js/jsdoc/) in details.
+```
